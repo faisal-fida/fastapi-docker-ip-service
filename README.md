@@ -1,55 +1,59 @@
-# FastAPI Docker Project
+# fastapi-docker-ip-service
 
-This project is a simple FastAPI application that demonstrates how to build and deploy a web API using Docker. The application includes a scraper that fetches the IP address from a specified URL.
+A tiny FastAPI service, packaged with Docker, that returns the server's public IP address.
 
-## Table of Contents
+## Features
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [Complexities](#complexities)
-- [Solutions](#solutions)
-- [Challenges](#challenges)
-- [License](#license)
+- `GET /` returns `{"Server": "Running"}`.
+- `GET /ip` fetches the URL set in the `URL` environment variable (the compose file uses `https://myexternalip.com/raw`) and returns its text as `{"ip": "..."}`.
+- Dockerfile and docker-compose file to run it.
 
-## Installation
+## Tech stack
 
-1. Clone the repository:
+Python 3.10, FastAPI, Uvicorn, Requests, python-dotenv, Docker.
 
-```sh
-git clone https://github.com/faisal-fida/fastapi_docker_project.git
-cd fastapi_docker_project
+## Structure
+
+```
+app.py              FastAPI routes
+scraper.py          Scraper class: HTTP GET of the URL from the environment
+Dockerfile
+docker-compose.yml  Sets URL and publishes port 8000
+requirements.txt
 ```
 
-2. Install the dependencies:
+## Setup and run
+
+Environment variable:
+
+- `URL`: address that returns the caller's public IP as plain text. Required for `/ip`. Can be put in a `.env` file.
+
+With Docker:
 
 ```sh
+docker compose up --build
+```
+
+Without Docker:
+
+```sh
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-```
-
-3. Create a `.env` file with the following content:
-
-```
-URL=<your_url_here>
-```
-
-4. Run the application:
-
-```sh
-uvicorn app:app --reload
+URL=https://myexternalip.com/raw python app.py
 ```
 
 ## Usage
 
-The application provides two endpoints:
+```sh
+curl http://localhost:8000/ip
+# {"ip":"203.0.113.7"}
+```
 
-1. `GET /` - Returns a message indicating the server is running.
-2. `GET /ip` - Returns the IP address fetched by the scraper.
+## Limitations
 
-- **Environment Variables**: The project uses `python-dotenv` to manage environment variables, which allows for secure and flexible configuration.
-- **Dependency Management**: Dependencies are managed using a `requirements.txt` file, ensuring that the correct versions of packages are used.
-- **External API Dependency**: The scraper relies on an external URL to fetch the IP address. Network issues or changes in the external API could affect the application's functionality.
-- **Configuration Management**: Managing environment variables securely and ensuring they are correctly set up can be challenging, especially in different environments (development, staging, production).
+- Minimal demo. No error handling: if `URL` is unset or unreachable, `/ip` returns a 500.
+- Despite the class name, `Scraper` only performs one GET request.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+MIT, see `LICENSE`.
